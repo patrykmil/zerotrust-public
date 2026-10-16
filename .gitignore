@@ -1,0 +1,4 @@
+*.qcow2
+*.sqlite
+result
+variables/authentik

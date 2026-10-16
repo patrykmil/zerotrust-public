@@ -1,0 +1,131 @@
+{
+	"tagOwners": {
+		"tag:identity": ["autogroup:admin"], // vm1: authentik + caddy
+		"tag:policy":   ["autogroup:admin"], // vm2: opa + victoriametrics
+		"tag:sensor":   ["autogroup:admin"], // vm3: zeek + alloy
+		"tag:observe":  ["autogroup:admin"], // vm4: grafana + loki
+		"tag:workload": ["autogroup:admin"], // vm5: public web app
+		"tag:internal": ["autogroup:admin"], // vm6: internal API
+	},
+
+	"ssh": [
+		{
+			"action": "accept",
+			"src":    ["autogroup:member"],
+
+			"dst": [
+				"tag:identity",
+				"tag:policy",
+				"tag:sensor",
+				"tag:observe",
+				"tag:workload",
+				"tag:internal",
+			],
+
+			"users": ["user"],
+		},
+	],
+
+	"grants": [
+		{
+			"src": ["autogroup:member"],
+			"dst": ["tag:identity"],
+			"ip":  ["9000"],
+		},
+		{
+			"src": ["autogroup:member"],
+			"dst": ["tag:identity"],
+			"ip":  ["8080"],
+		},
+		{
+			"src": ["autogroup:member"],
+			"dst": ["*"],
+			"ip":  ["22"],
+		},
+		{
+			"src": ["tag:policy"],
+			"dst": ["*"],
+			"ip":  ["9100"],
+		},
+		{
+			"src": ["tag:policy"],
+			"dst": ["tag:identity"],
+			"ip":  ["9300"],
+		},
+		{
+			"src": ["tag:policy"],
+			"dst": ["tag:identity"],
+			"ip":  ["6060"],
+		},
+		{
+			"src": ["tag:policy"],
+			"dst": ["tag:observe"],
+			"ip":  ["3000"],
+		},
+		{
+			"src": ["tag:policy"],
+			"dst": ["tag:observe"],
+			"ip":  ["3100"],
+		},
+		{
+			"src": ["tag:identity"],
+			"dst": ["tag:observe"],
+			"ip":  ["3000"],
+		},
+		{
+			"src": ["tag:identity"],
+			"dst": ["tag:policy"],
+			"ip":  ["8288"],
+		},
+		{
+			"src": ["tag:identity", "tag:workload", "tag:internal"],
+			"dst": ["tag:policy"],
+			"ip":  ["8443"],
+		},
+		{
+			"src": ["tag:internal"],
+			"dst": ["tag:policy"],
+			"ip":  ["8181"],
+		},
+		{
+			"src": ["tag:observe"],
+			"dst": ["tag:policy"],
+			"ip":  ["8428"],
+		},
+		{
+			"src": ["tag:sensor"],
+			"dst": ["tag:observe"],
+			"ip":  ["3100"],
+		},
+		{
+			"src": ["tag:identity", "tag:policy"],
+			"dst": ["tag:observe"],
+			"ip":  ["3100"],
+		},
+		{
+			"src": ["tag:identity"],
+			"dst": ["tag:workload"],
+			"ip":  ["8090"],
+		},
+		{
+			"src": ["tag:identity"],
+			"dst": ["tag:internal"],
+			"ip":  ["8091"],
+		},
+		{
+			"src": ["tag:workload"],
+			"dst": ["tag:internal"],
+			"ip":  ["8091"],
+		},
+		{
+			"src": ["tag:workload"],
+			"dst": ["tag:observe"],
+			"ip":  ["3100"],
+		},
+		{
+			"src": ["tag:internal"],
+			"dst": ["tag:observe"],
+			"ip":  ["3100"],
+		},
+	],
+}

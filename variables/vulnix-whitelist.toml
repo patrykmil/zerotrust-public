@@ -1,0 +1,14 @@
+# vulnix whitelist — suppress known false positives / accepted risks.
+#
+# Loaded by the daily vulnix-scan on every VM (-w) and by the sbomnix/vulnix
+# tooling.  TOML format: section header selects the package, options narrow
+# the rule.  A rule only masks the listed CVEs; new CVEs in the same package
+# still get reported.  `until` expires the rule automatically.
+#
+# Examples (uncomment + adapt):
+#
+# ["openssl-3.0.9"]
+# cve = ["CVE-2024-0727"]
+# until = "2026-12-31"
+# issue_url = "https://github.com/NixOS/nixpkgs/pull/123456"
+# comment = "patch pending upstream; not reachable from network-facing services"
