@@ -40,43 +40,8 @@ fish run.sh # required nix+tailscale+fish+wezterm
    3b. Paste tailscale/policy.hujson → Save
    3c. Machines → approve the SIX advertised tags if prompted
    (tag:identity, tag:policy, tag:sensor, tag:observe, tag:workload, tag:internal)
-4. Open http://localhost:8080 in a browser → redirected to Authentik login at http://localhost:9000. Log in as admin@testzero.local / admin.
-5. Follow the Authentik setup checklist below ("Manual Setup Steps").
+4. Open http://localhost:8080/dashboard → Authentik login at `http://<vm1-tailnet-ip>:9000`. Log in as admin@testzero.local / admin. The landing page `/` stays public.
 
-## Manual Setup Steps
-
-### Authentik (web UI at http://localhost:9000, admin@testzero.local / admin)
-
-- [ ] **Create Proxy Provider** — Applications → Providers → Create
-      (type: Proxy, mode: Forward auth (single application),
-      Name: `grafana-proxy`, External host: `http://localhost:8080`)
-- [ ] **Create Application** — Applications → Applications → Create
-      (Name: `Grafana`, Slug: `grafana`, Provider: `grafana-proxy`)
-- [ ] **Assign to Embedded Outpost** — Applications → Outposts → edit
-      `authentik Embedded Outpost` → add `Grafana` → Update
-- [ ] **Point the outpost at Authentik** — without this, login redirects go
-      to bare `http://localhost/…` (dead port 80). One-shot via API
-      (token from `variables/credentials.nix` → `authentik.bootstrapToken`):
-      `bash
-TOK="testzero-bootstrap-token"
-UUID=$(curl -s -H "Authorization: Bearer $TOK" \
-  http://localhost:9000/api/v3/outposts/instances/ \
-  | jq -r '.results[] | select(.name=="authentik Embedded Outpost") | .pk')
-CFG=$(curl -s -H "Authorization: Bearer $TOK" \
-  http://localhost:9000/api/v3/outposts/instances/$UUID/ \
-  | jq -c '.config | .authentik_host="http://localhost:9000"')
-curl -s -X PATCH -H "Authorization: Bearer $TOK" \
-  -H "Content-Type: application/json" \
-  http://localhost:9000/api/v3/outposts/instances/$UUID/ \
-  -d "{\"config\":$CFG}" | jq -r '.config.authentik_host'
-`
-      Verify: `curl -s -D - -o /dev/null http://localhost:8080/grafana/`
-      must 302 to `http://localhost:9000/application/o/authorize/…`.
-- [ ] **Create test viewer** — Directory → Groups → Create `viewers`;
-      Directory → Users → Create `viewer1` → join to `viewers`
-- [ ] **Create ungrouped user** — Directory → Users → Create `stranger1`
-      (no groups)
-- [ ] **Set passwords** — each user: edit → Set password = username
 - [ ] **Test the zones** — browse with the three users:
 
       | Path                            | stranger1 (no groups) | viewer1         | akadmin     |
@@ -91,6 +56,12 @@ curl -s -X PATCH -H "Authorization: Bearer $TOK" \
 ## Tests
 
 Tests in `demo/`
+
+Live Authentik smoke test (Python standard library only):
+`python3 tests/authentik.py <vm1-tailnet-ip>`.
+Checks provisioning, both demo logins, anonymous redirects, and 200/403 access
+to `/dashboard`, `/api/status` and `/grafana/` via localhost and the tailnet IP.
+The gateway URL is `http://<vm1-tailnet-ip>:8080/api/status`, not `/status` or `/8080`.
 
 ## Architecture
 

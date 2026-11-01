@@ -79,21 +79,23 @@ in
             }
           }
 
-          # --- INTERNAL API (vm6), /api/* prefix stripped --------------------
-          handle_path /api/* {
-            forward_auth localhost:9000 {
-              uri /outpost.goauthentik.io/auth/caddy
-              copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name
-              trusted_proxies private_ranges
-            }
-            forward_auth vm2:8288 {
-              uri /
-            }
-            reverse_proxy https://vm6:8091 {
-              transport http {
-                tls
-                tls_client_auth /var/lib/mtls/caddy.crt /var/lib/mtls/caddy.key
-                tls_trust_pool file /var/lib/mtls/root_ca.crt
+          handle /api/* {
+            route {
+              forward_auth localhost:9000 {
+                uri /outpost.goauthentik.io/auth/caddy
+                copy_headers X-Authentik-Username X-Authentik-Groups X-Authentik-Email X-Authentik-Name
+                trusted_proxies private_ranges
+              }
+              forward_auth vm2:8288 {
+                uri /
+              }
+              uri strip_prefix /api
+              reverse_proxy https://vm6:8091 {
+                transport http {
+                  tls
+                  tls_client_auth /var/lib/mtls/caddy.crt /var/lib/mtls/caddy.key
+                  tls_trust_pool file /var/lib/mtls/root_ca.crt
+                }
               }
             }
           }
